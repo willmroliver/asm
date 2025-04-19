@@ -170,22 +170,20 @@ str_cmp:
 str_cpy:
 	xor rax, rax
 .loop:
-	cmp byte[rdi + rax], 0
-	je .break
-	add rax, 1
 	cmp rax, rdx
-	ja .fail
+	jae .fail
 
-	mov dl, [rdi + rax - 1]
-	mov [rsi + rax - 1], dl
+	mov dl, [rdi + rax]
+	mov [rsi + rax], dl
+
+	cmp dl, 0
+	je .done
+
+	add rax, 1
 	jmp .loop
 .fail:
 	mov rax, 0
 	ret
-.break:
-	cmp rax, rdx
-	je .done
-	mov byte[rsi + rax], 0
 .done:
 	mov rax, rsi
 	ret

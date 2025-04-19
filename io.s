@@ -6,35 +6,18 @@ newline: db 10
 
 section .text
 
-global _start
-global _str_len
-global _print_str
-global _print_char
-global _print_newline
-global _print_uint
-global _print_int
-global _str_cmp
-global _str_cpy
-
-_start:
-        lea rdi, [msg]
-        call _print_str
-        call _print_newline
-
-	mov rdi, msg1
-	mov rsi, msg
-	mov rdx, 20
-	call _str_cpy
-
-	mov rdi, rsi
-	call _print_str
-	call _print_newline
-
-        call exit
+global str_len
+global print_str
+global print_char
+global print_newline
+global print_uint
+global print_int
+global str_cmp
+global str_cpy
 
 
 ; counts null-terminated string length
-_str_len:
+str_len:
         xor rax, rax
         mov cl, 0
 .iter:
@@ -47,11 +30,11 @@ _str_len:
 
 
 ; prints a null-terminated string
-_print_str:
+print_str:
         push rdi
 	sub rsp, 8
 
-        call _str_len
+        call str_len
 
 	add rsp, 8
 	pop rsi
@@ -64,7 +47,7 @@ _print_str:
 
 
 ; prints a character
-_print_char:
+print_char:
         sub rsp, 16
         mov byte[rsp], dil
 
@@ -80,7 +63,7 @@ _print_char:
 
 
 ; prints the newline character
-_print_newline:
+print_newline:
         mov rax, 1
         mov rdi, 1
         mov rsi, newline
@@ -90,7 +73,7 @@ _print_newline:
 
 
 ; prints an unsigned integer in decimal format
-_print_uint:
+print_uint:
         sub rsp, 32
         mov rax, rdi
         lea rdi, [rsp + 31]
@@ -111,14 +94,14 @@ _print_uint:
         jmp .loop
 .done:
         add rdi, 1
-        call _print_str
+        call print_str
 
         add rsp, 32
         ret
 
 
 ; prints a signed integer in decimal format
-_print_int:
+print_int:
         sub rsp, 32
         mov rax, rdi
 
@@ -156,14 +139,14 @@ _print_int:
         sub rdi, 1
 .done:
         add rdi, 1
-        call _print_str
+        call print_str
 
         add rsp, 32
         ret
 
 
 ; returns 1, 0, -1 if [rdi] is lexicographically above, equal, below [rsi]
-_str_cmp:
+str_cmp:
 	xor rax, rax
 .loop:
 	mov rcx, [rdi + rax]
@@ -184,13 +167,13 @@ _str_cmp:
 
 
 ; copies string into a buffer, returns 0 if string exceeds buffer size
-_str_cpy:
+str_cpy:
 	xor rax, rax
 .loop:
 	cmp byte[rdi + rax], 0
 	je .break
 	add rax, 1
-	cmp rax, rcx
+	cmp rax, rdx
 	ja .fail
 
 	mov dl, [rdi + rax - 1]
@@ -200,7 +183,7 @@ _str_cpy:
 	mov rax, 0
 	ret
 .break:
-	cmp rax, rcx
+	cmp rax, rdx
 	je .done
 	mov byte[rsi + rax], 0
 .done:

@@ -1,9 +1,5 @@
 section .data
 
-msg: db 'Arsenal at the Bernebau!', 0
-msg1: db 'Different', 0
-newline: db 10
-
 section .text
 
 global str_len
@@ -19,12 +15,11 @@ global str_cpy
 ; counts null-terminated string length
 str_len:
         xor rax, rax
-        mov cl, 0
-.iter:
-        cmp cl, byte[rdi + rax]
+.loop:
+        cmp byte[rdi + rax], 0
         je .done
         add rax, 1
-        jmp .iter
+        jmp .loop
 .done:
         ret
 
@@ -64,11 +59,14 @@ print_char:
 
 ; prints the newline character
 print_newline:
+	sub rsp, 16
+	mov byte[rsp], 10
         mov rax, 1
         mov rdi, 1
-        mov rsi, newline
+        mov rsi, rsp
         mov rdx, 1
         syscall
+	add rsp, 16
         ret
 
 
@@ -149,8 +147,8 @@ print_int:
 str_cmp:
 	xor rax, rax
 .loop:
-	mov rcx, [rdi + rax]
-	cmp rcx, [rsi + rax]
+	mov cl, [rdi + rax]
+	cmp cl, [rsi + rax]
 	je .eq
 	jg .gt
 	jmp .lt

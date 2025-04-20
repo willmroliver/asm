@@ -14,7 +14,7 @@ int main() {
 	char s0[32] = "Arsenal at the Bernebau!\0";
 	char *s1 = "Different";
 
-	printf("strlen: %llu\n", str_len(s0));
+	printf("strlen: %lu\n", str_len(s0));
 	print_str(s0); print_newline();
 	print_int(-123); print_newline();
 	printf("strcmp: %d\n", str_cmp(s0, s1));

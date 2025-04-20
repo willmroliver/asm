@@ -11,7 +11,7 @@ testobjs = $(patsubst %_test.c, $(builddir)/%_test.o, $(testsrcs))
 tests = $(patsubst %_test.c, $(testdir)/%, $(testsrcs))
 
 flags = -f elf64
-cflags = -Wall -Wextra -std=gnu89
+cflags = -Wall -Wextra -std=gnu89 -z noexecstack
 
 ifeq ($(OS), macos)
 	flags = -f macho64
@@ -36,7 +36,7 @@ $(builddir)/%_test.o : %_test.c
 	gcc $(cflags) -c -o $@ $<
 
 $(testdir)/% : $(builddir)/%_test.o
-	gcc $(cflags) -o $@ $< $(objs)
+	gcc $(cflags) -o $@ $< $(objs) 
 
 .PHONY : clean
 

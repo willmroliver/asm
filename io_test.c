@@ -13,6 +13,7 @@ extern uint64_t parse_uint(char *s);
 extern int64_t parse_int(char *s);
 extern int str_cmp(char *s0, char *s1);
 extern char *str_cpy(char *src, char *dst, uint64_t len);
+extern char *f_read(char *fname);
 
 int main() {
 	char s0[32] = "Arsenal at the Bernebau!\0";
@@ -36,5 +37,7 @@ int main() {
 	printf("str: %s\n", s0);
 	printf("parse_int: %ld\n", parse_int(read_word(s0, 32)));
 	printf("str: %s\n", s0);
+	printf("file content:\n%s\n", f_read("io_test.c"));
+	
 	return 0;
 }

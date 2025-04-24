@@ -12,6 +12,9 @@ global parse_uint
 global parse_int
 global str_cmp
 global str_cpy
+global f_read
+global f_write
+global f_append
 
 
 ; counts null-terminated string length
@@ -29,11 +32,11 @@ str_len:
 ; prints a null-terminated string
 print_str:
         push rdi
+
 	sub rsp, 8
-
         call str_len
-
 	add rsp, 8
+	
 	pop rsi
 
         mov rdx, rax
@@ -107,7 +110,10 @@ print_int:
 	sub rdi, 1
 .print:
         add rdi, 1
+
+	sub rsp, 8
         call print_str
+	add rsp, 8
 
         add rsp, 32
         ret
@@ -182,6 +188,7 @@ read_word:
 	ret
 
 
+; parses a uint string
 parse_uint:
 	xor rax, rax
 	xor rsi, rsi
@@ -209,6 +216,7 @@ parse_uint:
 	ret
 	
 
+; parses an int string
 parse_int:
 	xor rax, rax
 	xor rsi, rsi
@@ -293,8 +301,95 @@ str_cpy:
 	ret
 
 
-; exits the process, assumes exit code is set
-exit:
-        mov rax, 60
-        syscall
+O_RDONLY  equ 0x000
+O_WRONLY  equ 0x001
+O_RDWR	  equ 0x002
+O_APPEND  equ 0x400
+
+PROT_NONE   equ 0x0
+PROT_READ   equ 0x1
+PROT_WRITE  equ 0x2
+PROT_EXEC   equ 0x3
+
+MAP_SHARED  equ 0x01
+MAP_PRIVATE equ 0x02
+MAP_ANON    equ 0x20
+
+
+; allocates memory, opens file, reads content to memory
+f_read:
+	sub rsp, 256
+	xor rax, rax
+
+	; sys_open
+	mov rax, 2
+	mov rsi, O_RDONLY
+	syscall
+	cmp rax, 0
+	jle .fail
+
+	mov [rsp + 160], rax ; fd
+
+	; sys_fstat
+	mov rax, 5
+	mov rdi, [rsp + 160]
+	mov rsi, rsp
+	syscall
+	cmp rax, 0
+	jl .fail
+
+	mov rsi, 0x1000	; sys_mmap length
+.loop:
+	cmp rsi, [rsp + 48]
+	jae .break
+	shr rsi, 1
+	jmp .loop
+.break:
+	mov [rsp + 8], rsi ; keep length 
+
+	; sys_mmap
+	mov rax, 9
+	xor rdi, rdi	      ; addr = NULL
+	mov rdx, PROT_READ    ; prot = PROT_READ | PROT_WRITE
+	xor rdx, PROT_WRITE
+	mov r10, MAP_PRIVATE  ; flags = MAP_PRIVATE | MAP_ANON
+	or r10, MAP_ANON
+	mov r8, -1	      ; fd = -1 (good practice for MAP_ANON)
+	xor r9, r9	      ; offset = 0
+	syscall
+	cmp rax, 0
+	jle .fail
+
+	mov [rsp], rax ; new memory-region address 
+
+	; sys_read
+	mov rdx, [rsp + 48]   ; file size is 48 bytes into fstat
+	xor rax, rax
+	mov rdi, [rsp + 160]  ; fd
+	mov rsi, [rsp]	      ; buf
+	mov rdx, [rsp + 48]   ; count
+	syscall
+	cmp rax, 0
+	jle .fail
+	mov rax, [rsp]
+	jmp .success
+	
+	; failed: de-alloc memory
+	mov rax, 11
+	mov rdi, [rsp]
+	mov rsi, [rsp + 8]
+	syscall
+	jmp .fail
+.success:
+.fail:
+	add rsp, 256
+	ret
+
+
+; writes null-terminated string to disk
+f_write:
+
+
+; appends null-terminated string to disk
+f_append:
 

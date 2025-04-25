@@ -61,6 +61,7 @@ is_fib:
 	sub r12, 8
 
 	mov rdi, r12
+	; pushed a qword at prologue, so 16-bit aligned after call
 	call isqrt
 	mul rax
 	cmp rax, r12
@@ -78,7 +79,7 @@ is_fib:
 isqrt:
 	xor rcx, rcx
 	mov rcx, 1
-	shl rcx, 31 ; max possible sqrt of a 64-bit int is 2^32
+	shl rcx, 31 ; max possible sqrt of a 64-bit int < 2^32
 .loop:
 	cmp rcx, rdi
 	jl .break

@@ -41,10 +41,13 @@ fibonacci:
 
 
 ; is_fib checks if 5n^2 + 4 or 5n^2 - 4 is perfect square
+; to avoid overflow, input is truncated to first 29 bits
 is_fib:
 	push r12
+	push r13
+	push r14
 
-	and rdi, 0xffffffff
+	and rdi, 0x1fffffff
 	mov rax, rdi
 	mul rdi
 	mov rcx, 5
@@ -55,13 +58,14 @@ is_fib:
 	mov rdi, r12
 	call isqrt
 
+	; iqsrt guarantees no overflow
 	mul rax
 	cmp rax, r12
 	je .true
 	sub r12, 8
 
 	mov rdi, r12
-	; pushed a qword at prologue, so 16-bit aligned after call
+	; 24-byte offset from prologue, so 16-bit aligned after call
 	call isqrt
 	mul rax
 	cmp rax, r12
@@ -72,6 +76,8 @@ is_fib:
 .true:
 	mov rax, 1
 .done:
+	pop r14
+	pop r13
 	pop r12
 	ret
 

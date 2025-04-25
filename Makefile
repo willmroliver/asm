@@ -4,6 +4,7 @@ testdir = test
 
 srcs = $(wildcard *.s)
 objs = $(patsubst %.s, $(builddir)/%.s.o, $(srcs))
+libs = $(patsubst %.s, $(builddir)/%.s.so, $(srcs))
 exes = $(patsubst %.s, $(exedir)/%, $(srcs))
 
 testsrcs = $(wildcard *_test.c)
@@ -19,7 +20,7 @@ ifeq ($(DEBUG), 1)
 	exedir = dexe
 endif
 
-all : dirs $(objs) $(testobjs) $(tests)
+all : dirs $(objs) $(libs) $(testobjs) $(tests)
 
 dirs :
 	mkdir -p $(builddir) $(exedir) $(testdir)
@@ -27,12 +28,14 @@ dirs :
 $(builddir)/%.s.o : %.s
 	nasm $(flags) -o $@ $<
 
+$(builddir)/%.s.so : $(builddir)/%.s.o 
+	ld -shared -o $@ $< --dynamic-linker=/lib64/lib64/ld-linux-x86-64.so.2
+
 $(builddir)/%_test.o : %_test.c
 	gcc $(cflags) -c -o $@ $<
 
 $(testdir)/% : $(builddir)/%_test.o
-	@tname=$(notdir $@); \
-	gcc $(cflags) -o $@ $< $(builddir)/$$tname.s.o 
+	gcc $(cflags) -o $@ $< $(libs) 
 
 .PHONY : clean
 
